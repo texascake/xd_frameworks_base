@@ -70,6 +70,8 @@ public final class AttestationHooks {
     private static final boolean sSpoofPhotos =
             Resources.getSystem().getBoolean(R.bool.config_spoofGooglePhotos);
 
+    private static volatile boolean sIsGms = false;
+
     private AttestationHooks() { }
 
     private static void setBuildField(String key, String value) {
@@ -101,10 +103,23 @@ public final class AttestationHooks {
     public static void initApplicationBeforeOnCreate(Application app) {
         if (PACKAGE_GMS.equals(app.getPackageName()) &&
                 PROCESS_UNSTABLE.equals(Application.getProcessName())) {
+            sIsGms = true;
             spoofBuildGms();
         } else if (sSpoofPhotos && PACKAGE_GPHOTOS.equals(app.getPackageName())) {
             sIsPhotos = true;
             sP1Props.forEach((k, v) -> setBuildField(k, v));
+        }
+    }
+
+    private static boolean isCallerSafetyNet() {
+        return Arrays.stream(Thread.currentThread().getStackTrace())
+                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
+    }
+
+    public static void onEngineGetCertificateChain() {
+        // Check stack for SafetyNet
+        if (sIsGms && isCallerSafetyNet()) {
+            throw new UnsupportedOperationException();
         }
     }
 
