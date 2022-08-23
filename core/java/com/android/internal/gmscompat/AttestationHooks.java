@@ -35,7 +35,7 @@ public final class AttestationHooks {
 
     private static final String PACKAGE_GMS = "com.google.android.gms";
     private static final String PACKAGE_GPHOTOS = "com.google.android.apps.photos";
-
+    private static final String PACKAGE_FINSKY = "com.android.vending";
     private static final String PROCESS_UNSTABLE = "com.google.android.gms.unstable";
 
     private static final String PRODUCT_GMS_SPOOFING_FINGERPRINT =
@@ -71,6 +71,7 @@ public final class AttestationHooks {
             Resources.getSystem().getBoolean(R.bool.config_spoofGooglePhotos);
 
     private static volatile boolean sIsGms = false;
+    private static volatile boolean sIsFinsky = false;
 
     private AttestationHooks() { }
 
@@ -128,6 +129,11 @@ public final class AttestationHooks {
             sIsPhotos = true;
             sP1Props.forEach((k, v) -> setBuildField(k, v));
         }
+
+        if (PACKAGE_FINSKY.equals(app.getPackageName())) {
+            sIsFinsky = true;
+            spoofBuildGms();
+        }
     }
 
     private static boolean isCallerSafetyNet() {
@@ -138,6 +144,11 @@ public final class AttestationHooks {
     public static void onEngineGetCertificateChain() {
         // Check stack for SafetyNet
         if (sIsGms && isCallerSafetyNet()) {
+            throw new UnsupportedOperationException();
+        }
+
+        // Check stack for PlayIntegrity
+        if (sIsFinsky) {
             throw new UnsupportedOperationException();
         }
     }
