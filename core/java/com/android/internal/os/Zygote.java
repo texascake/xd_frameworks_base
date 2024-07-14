@@ -47,6 +47,8 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.android.internal.util.xdroid.PixelPropsUtils;
+
 /** @hide */
 public final class Zygote {
     /*
